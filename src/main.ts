@@ -1,32 +1,62 @@
 import './style.css'
 import * as THREE from 'three';
+import { Player } from './game/player/player';
+import { GameObject } from './core';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { Global } from './core/globals/lib/global';
+import { GlobalToken } from './global-token';
 
+const gameObjects: GameObject[] = [];
+let scene: THREE.Scene;
+let renderer: THREE.WebGLRenderer;
+let camera: THREE.Camera;
+let axesHelper: THREE.AxesHelper;
+let player: Player;
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xf6edee);
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
-camera.position.set(0, 45, 65);
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+function setup() {
+  scene = new THREE.Scene();
+  Global.set(GlobalToken.Scene, scene);
+  scene.background = new THREE.Color(0xf6edee);
 
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-renderer.outputEncoding = THREE.sRGBEncoding;
+  player = new Player();
+  gameObjects.push(player);
 
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+  // renderer
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+}
 
-const axesHelper = new THREE.AxesHelper(5);
-scene.add(axesHelper);
+function start() {
+  gameObjects.forEach(gameObject => {
+    scene.add(gameObject);
+    gameObject.start();
+  });
 
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.update();
+  // helpers
+  axesHelper = new THREE.AxesHelper(12);
+  scene.add(axesHelper);
+
+  camera = player.getObject(THREE.PerspectiveCamera);
+  // const controls = new OrbitControls(camera, renderer.domElement);
+
+  const gridHelper = new THREE.GridHelper(100, 25);
+  scene.add(gridHelper);
+
+}
 
 function animate() {
   requestAnimationFrame(animate);
 
+  gameObjects.forEach(object => object.update());
+
   renderer.render(scene, camera);
 }
 
+setup();
+start();
 animate();
